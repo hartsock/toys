@@ -28,7 +28,7 @@ public class ConcordanceTest {
     @Test
     public void run() {
         concordance.run();
-        Assert.assertEquals(554, concordance.count("you"));
+        Assert.assertEquals(556, concordance.count("you"));
         Assert.assertEquals(1, concordance.count("yon"));
         Assert.assertEquals(12, concordance.count("doubt"));
         Assert.assertEquals(0, concordance.count("doubtish"));

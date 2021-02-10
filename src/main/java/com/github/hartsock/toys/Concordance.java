@@ -21,7 +21,7 @@ public class Concordance implements Runnable{
     String url;
 
     List<String> words;
-    Map<String, Integer> concordance;
+    Map<String, Number> concordance;
 
     public String getUrl() {
         return url;
@@ -60,19 +60,18 @@ public class Concordance implements Runnable{
         }
     }
 
-    Map<String, Integer> concordance(final List<String> words) {
-        final Map<String, Integer> concordance = words.stream()
+    Map<String, Number> concordance(final List<String> words) {
+        final Map<String, Number> concordance = words.stream()
                 .filter((w) -> w != null && w.length() > 0)
                 .filter((w) -> w.matches("\\w+"))
-                .filter((w) -> !w.contains("_"))
                 .filter((w) -> !w.matches("\\d+"))
-                .collect(Collectors.toMap((w) -> w, (w) -> 1, (a, b) -> a + b));
+                .collect(Collectors.toMap((w) -> w, (w) -> 1, (a, b) -> a.intValue() + b.intValue()));
         return concordance;
     }
 
     List<String> toWords(final List<String> lines) {
         final List<String> words = lines.stream()
-                .map((l) -> l.split("\\W"))
+                .map((l) -> l.split("(\\W|_)"))
                 .flatMap(arr -> Arrays.stream(arr))
                 .collect(Collectors.toList());
         return words;
@@ -83,7 +82,7 @@ public class Concordance implements Runnable{
         System.exit(exitCode);
     }
 
-    public int count(final String word) {
+    public Number count(final String word) {
         if(concordance == null) {
             return -1;
         }
