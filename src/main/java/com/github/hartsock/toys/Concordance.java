@@ -23,16 +23,26 @@ public class Concordance implements Runnable{
     List<String> words;
     Map<String, Number> concordance;
 
-    public String getUrl() {
-        return url;
-    }
-
     public void setUrl(final String url) {
         this.url = url;
     }
 
     public void run() {
         System.out.println(url);
+        final List<String> lines = getLines(url);
+
+        words = toWords(lines);
+        concordance = concordance(words);
+
+        System.out.println();
+        System.out.println(lines.get(0));
+        System.out.println("Concordance:");
+        for (final String key : concordance.keySet().stream().sorted().collect(Collectors.toList())) {
+            System.out.println("    " + key + ": " + concordance.get(key));
+        }
+    }
+
+    List<String> getLines(final String url) {
         final List<String> lines = new LinkedList<>();
         try {
             final URL textUrl = new URL(url);
@@ -48,16 +58,15 @@ public class Concordance implements Runnable{
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
+        return lines;
+    }
 
-        words = toWords(lines);
-        concordance = concordance(words);
-
-        System.out.println();
-        System.out.println(lines.get(0));
-        System.out.println("Concordance:");
-        for (final String key : concordance.keySet().stream().sorted().collect(Collectors.toList())) {
-            System.out.println("    " + key + ": " + concordance.get(key));
-        }
+    List<String> toWords(final List<String> lines) {
+        final List<String> words = lines.stream()
+                .map((l) -> l.split("(\\W|_)"))
+                .flatMap(arr -> Arrays.stream(arr))
+                .collect(Collectors.toList());
+        return words;
     }
 
     Map<String, Number> concordance(final List<String> words) {
@@ -69,26 +78,23 @@ public class Concordance implements Runnable{
         return concordance;
     }
 
-    List<String> toWords(final List<String> lines) {
-        final List<String> words = lines.stream()
-                .map((l) -> l.split("(\\W|_)"))
-                .flatMap(arr -> Arrays.stream(arr))
-                .collect(Collectors.toList());
-        return words;
-    }
-
-    public static void main(String[] args) {
-        int exitCode = new CommandLine(new Concordance()).execute(args);
-        System.exit(exitCode);
-    }
-
+    /**
+     * return the number of times a word was seen
+     * @param word the word to look up
+     * @return times seen
+     */
     public Number count(final String word) {
         if(concordance == null) {
-            return -1;
+            throw new IllegalStateException("No text has been loaded yet!");
         }
         if(concordance.containsKey(word)) {
             return concordance.get(word);
         }
         return 0;
+    }
+
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new Concordance()).execute(args);
+        System.exit(exitCode);
     }
 }
