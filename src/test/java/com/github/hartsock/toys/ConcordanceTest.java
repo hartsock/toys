@@ -5,6 +5,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.net.URL;
+
 import static org.junit.Assert.*;
 
 public class ConcordanceTest {
@@ -14,6 +16,9 @@ public class ConcordanceTest {
     @Before
     public void setUp() throws Exception {
         concordance = new Concordance();
+        final URL fileUrl = getClass().getClassLoader().getResource("frankenstein.txt");
+        Assert.assertNotNull(fileUrl);
+        concordance.setUrl(fileUrl.toString());
     }
 
     @After
@@ -22,9 +27,8 @@ public class ConcordanceTest {
 
     @Test
     public void run() {
-        concordance.setUrl("http://www.gutenberg.org/files/84/84-0.txt");
         concordance.run();
-        Assert.assertEquals(647, concordance.count("you"));
+        Assert.assertEquals(554, concordance.count("you"));
         Assert.assertEquals(1, concordance.count("yon"));
         Assert.assertEquals(12, concordance.count("doubt"));
         Assert.assertEquals(0, concordance.count("doubtish"));

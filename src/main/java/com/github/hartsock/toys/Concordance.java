@@ -16,10 +16,7 @@ import java.util.stream.Collectors;
         subcommands={}
 )
 public class Concordance implements Runnable{
-    public static final String DEFAULT_URL = "http://www.gutenberg.org/files/84/84-0.txt";
-
-
-    @Parameters(paramLabel = "<URL>", defaultValue = DEFAULT_URL,
+    @Parameters(paramLabel = "<URL>",
                 description = "URL of text to process. Defaults to Frankenstein or, The Modern Prometheus")
     String url;
 
@@ -69,16 +66,15 @@ public class Concordance implements Runnable{
                 .filter((w) -> w.matches("\\w+"))
                 .filter((w) -> !w.contains("_"))
                 .filter((w) -> !w.matches("\\d+"))
-                .collect(Collectors.toMap((w) -> w.toLowerCase(Locale.ROOT), (w) -> 1, (a, b) -> a + b));
+                .collect(Collectors.toMap((w) -> w, (w) -> 1, (a, b) -> a + b));
         return concordance;
     }
 
     List<String> toWords(final List<String> lines) {
-        final List<String> words = new LinkedList<String>();
-        lines.stream()
+        final List<String> words = lines.stream()
                 .map((l) -> l.split("\\W"))
-                .collect(Collectors.toList())
-                .forEach((String[] l) -> Arrays.stream(l).forEach(words::add));
+                .flatMap(arr -> Arrays.stream(arr))
+                .collect(Collectors.toList());
         return words;
     }
 
