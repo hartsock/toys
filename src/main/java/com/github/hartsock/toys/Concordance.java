@@ -1,4 +1,5 @@
 package com.github.hartsock.toys;
+import com.github.hartsock.toys.streams.ResultHolder;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -6,7 +7,6 @@ import picocli.CommandLine.Parameters;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Command(
@@ -29,9 +29,9 @@ public class Concordance implements Runnable{
 
     public void run() {
         System.out.println(url);
-        final Wrapper<List<String>, ? extends Throwable> result = getLines(url);
+        final ResultHolder<List<String>, ? extends Throwable> result = getLines(url);
         if(result.hasError()) {
-            System.out.println(result.e.getMessage());
+            System.out.println(result.getE().getMessage());
             throw new RuntimeException(result.getE());
         }
         final List<String> lines = result.get();
@@ -52,62 +52,20 @@ public class Concordance implements Runnable{
             printer.println("    " + key + ": " + concordance.get(key));
         }
     }
-
-    static class Wrapper<T,E> {
-        final T t;
-        final E e;
-
-        Wrapper(final T t, final E e) {
-            this.t = t;
-            this.e = e;
-        }
-
-        T get() {
-            return t;
-        }
-
-        static <T,E> Wrapper<T,E> ofResult(T t) {
-            return new Wrapper(t, null);
-        }
-
-        static <T,E> Wrapper<T,E> ofException(E e) {
-            return new Wrapper(null, e);
-        }
-
-        static <T,E> Wrapper<T,E> of(T t, E e) {
-            return new Wrapper(t, e);
-        }
-
-        public T orElse(final Function<E, T> f) {
-            if(t != null) {
-                return t;
-            }
-            return f.apply(e);
-        }
-
-        public boolean hasError() {
-            return e != null;
-        }
-
-        public E getE() {
-            return e;
-        }
-    }
-
-    Wrapper<List<String>,? extends Throwable> getLines(final String url) {
+    
+    ResultHolder<List<String>,? extends Throwable> getLines(final String url) {
         try(
                 final BufferedReader in = new BufferedReader(
                         new InputStreamReader(
-                                new URL(url).openStream(), "" +
-                                "UTF-8"
+                                new URL(url).openStream(), "UTF-8"
                         )
                 )
         ) {
-            return Wrapper.<List<String>, Throwable>ofResult(
+            return ResultHolder.<List<String>, Throwable>ofResult(
                     in.lines().collect(Collectors.toList())
             );
         } catch (final IOException e) {
-            return Wrapper.ofException(e);
+            return ResultHolder.ofException(e);
         }
     }
 
