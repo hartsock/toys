@@ -74,7 +74,7 @@ public class Concordance implements Runnable, Callable<Map<String,Number>> {
         return concordance;
     }
 
-    void printConcordance(final PrintStream printer, final Map<String, Number> concordance) {
+    public static void printConcordance(final PrintStream printer, final Map<String, Number> concordance) {
         printer.println("Concordance:");
         for (final String key : concordance.keySet().stream().sorted().collect(Collectors.toList())) {
             printer.println("    " + key + ": " + concordance.get(key));
