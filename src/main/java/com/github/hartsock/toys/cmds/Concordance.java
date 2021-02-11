@@ -65,7 +65,7 @@ public class Concordance implements Runnable, Callable<Map<String,Number>> {
         final ResultHolder<List<String>, ? extends Throwable> result = getLines(url);
         if(result.hasError()) {
             System.out.println(result.getE().getMessage());
-            throw new RuntimeException(result.getE());
+            throw new CommandRuntimeException(result.getE());
         }
         lines = result.get();
 
