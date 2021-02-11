@@ -6,8 +6,21 @@ import picocli.CommandLine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.ResourceBundle;
 
+
+/**
+ * This main class doesn't do much but hold references to the other classes.
+ * It's job is to act as a central entry point to the other commands we
+ * will add over time.
+ * <p/>
+ * Each toy could have been rolled as a stand alone but done this way
+ * we can keep a collection of toys with common utilities together.
+ * <p/>
+ * Each toy is really about playing with different Java programming
+ * features, utilities, syntax, and Java API.
+ * <p/>
+ * @author hartsock
+ */
 @CommandLine.Command(
         name = "toys",
         version = "1.0",
