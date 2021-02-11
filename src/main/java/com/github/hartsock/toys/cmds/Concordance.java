@@ -1,27 +1,43 @@
-package com.github.hartsock.toys;
-import com.github.hartsock.toys.streams.ResultHolder;
+package com.github.hartsock.toys.cmds;
+
+import com.github.hartsock.toys.ResultHolder;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 @Command(
-        name = "Concordance",
+        name = "concordance",
         version = "1.0",
         mixinStandardHelpOptions = true,
         subcommands={}
 )
-public class Concordance implements Runnable{
+public class Concordance implements Runnable, Callable<Map<String,Number>> {
     @Parameters(paramLabel = "<URL>",
-                description = "URL of text to process. Defaults to Frankenstein or, The Modern Prometheus")
-    String url;
+                description = "URL of text to process")
+    private String url;
 
+    List<String> lines;
     List<String> words;
     Map<String, Number> concordance;
+
+    public Concordance(final String url) {
+        this.url = url;
+    }
+
+    public Concordance() {
+        this(null);
+    }
 
     public void setUrl(final String url) {
         this.url = url;
@@ -29,21 +45,33 @@ public class Concordance implements Runnable{
 
     public void run() {
         System.out.println(url);
-        final ResultHolder<List<String>, ? extends Throwable> result = getLines(url);
-        if(result.hasError()) {
-            System.out.println(result.getE().getMessage());
-            throw new RuntimeException(result.getE());
-        }
-        final List<String> lines = result.get();
 
-        words = toWords(lines);
-        concordance = concordance(words);
+        try {
+            call();
+        } catch (final Exception e) {
+            System.out.println(e.getMessage());
+            throw new CommandRuntimeException(e);
+        }
 
         System.out.println();
         System.out.println(lines.get(0));
         if(lines.size() > 1) {
             printConcordance(System.out, concordance);
         }
+    }
+
+    @Override
+    public Map<String, Number> call() throws Exception {
+        final ResultHolder<List<String>, ? extends Throwable> result = getLines(url);
+        if(result.hasError()) {
+            System.out.println(result.getE().getMessage());
+            throw new RuntimeException(result.getE());
+        }
+        lines = result.get();
+
+        words = toWords(lines);
+        concordance = concordance(words);
+        return concordance;
     }
 
     void printConcordance(final PrintStream printer, final Map<String, Number> concordance) {

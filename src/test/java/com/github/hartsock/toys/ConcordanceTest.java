@@ -1,13 +1,12 @@
 package com.github.hartsock.toys;
 
+import com.github.hartsock.toys.cmds.Concordance;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URL;
-
-import static org.junit.Assert.*;
 
 public class ConcordanceTest {
 
