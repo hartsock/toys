@@ -4,9 +4,9 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Command(
@@ -29,36 +29,86 @@ public class Concordance implements Runnable{
 
     public void run() {
         System.out.println(url);
-        final List<String> lines = getLines(url);
+        final Wrapper<List<String>, ? extends Throwable> result = getLines(url);
+        if(result.hasError()) {
+            System.out.println(result.e.getMessage());
+            throw new RuntimeException(result.getE());
+        }
+        final List<String> lines = result.get();
 
         words = toWords(lines);
         concordance = concordance(words);
 
         System.out.println();
         System.out.println(lines.get(0));
-        System.out.println("Concordance:");
-        for (final String key : concordance.keySet().stream().sorted().collect(Collectors.toList())) {
-            System.out.println("    " + key + ": " + concordance.get(key));
+        if(lines.size() > 1) {
+            printConcordance(System.out, concordance);
         }
     }
 
-    List<String> getLines(final String url) {
-        final List<String> lines = new LinkedList<>();
-        try {
-            final URL textUrl = new URL(url);
-            final BufferedReader in = new BufferedReader(
-                    new InputStreamReader(textUrl.openStream(), "UTF-8"));
-            String line = in.readLine();
-            while(line != null) {
-                lines.add(line);
-                line = in.readLine();
-            }
-        } catch (MalformedURLException e) {
-            System.out.println(e.getCause());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+    void printConcordance(final PrintStream printer, final Map<String, Number> concordance) {
+        printer.println("Concordance:");
+        for (final String key : concordance.keySet().stream().sorted().collect(Collectors.toList())) {
+            printer.println("    " + key + ": " + concordance.get(key));
         }
-        return lines;
+    }
+
+    static class Wrapper<T,E> {
+        final T t;
+        final E e;
+
+        Wrapper(final T t, final E e) {
+            this.t = t;
+            this.e = e;
+        }
+
+        T get() {
+            return t;
+        }
+
+        static <T,E> Wrapper<T,E> ofResult(T t) {
+            return new Wrapper(t, null);
+        }
+
+        static <T,E> Wrapper<T,E> ofException(E e) {
+            return new Wrapper(null, e);
+        }
+
+        static <T,E> Wrapper<T,E> of(T t, E e) {
+            return new Wrapper(t, e);
+        }
+
+        public T orElse(final Function<E, T> f) {
+            if(t != null) {
+                return t;
+            }
+            return f.apply(e);
+        }
+
+        public boolean hasError() {
+            return e != null;
+        }
+
+        public E getE() {
+            return e;
+        }
+    }
+
+    Wrapper<List<String>,? extends Throwable> getLines(final String url) {
+        try(
+                final BufferedReader in = new BufferedReader(
+                        new InputStreamReader(
+                                new URL(url).openStream(), "" +
+                                "UTF-8"
+                        )
+                )
+        ) {
+            return Wrapper.<List<String>, Throwable>ofResult(
+                    in.lines().collect(Collectors.toList())
+            );
+        } catch (final IOException e) {
+            return Wrapper.ofException(e);
+        }
     }
 
     List<String> toWords(final List<String> lines) {
